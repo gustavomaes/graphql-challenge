@@ -1,15 +1,22 @@
 import React, { Component } from "react"
 import { StackActions, NavigationActions } from "react-navigation"
 
-import { Image, View, Text, AsyncStorage } from "react-native"
+import {
+  Image,
+  View,
+  Text,
+  ActivityIndicator,
+  AsyncStorage
+} from "react-native"
 
 import styles from "./style"
 import SigninForm from "../../components/SigninForm"
 import CustomBar from "../../components/CustomBar"
+import { colors } from "../../styles/base"
 
-//Redux
-import { connect } from "react-redux"
-import ActionCreators from "../../redux/actionCreators"
+//GraphQl
+import { Mutation } from "react-apollo"
+import gql from "graphql-tag"
 
 class SignIn extends Component {
   static navigationOptions = {
@@ -29,29 +36,21 @@ class SignIn extends Component {
     this.props.navigation.dispatch(resetAction)
   }
 
-  signIn = () => {
-    this.props.signIn({
-      email: this.state.email,
-      password: this.state.password
-    })
-  }
-
   onChange = (input, value) => {
     let change = {}
     change[input] = value
     this.setState(change)
   }
 
+  setToken = token => {
+    AsyncStorage.setItem("@root:token", token).then(() => {
+      this.goHome()
+    })
+  }
+
   render() {
     const { email, password } = this.state
-    const { user } = this.props
     const { navigate } = this.props.navigation
-
-    if (user.token != "") {
-      AsyncStorage.setItem("@root:token", user.token).then(() => {
-        this.goHome()
-      })
-    }
 
     return (
       <View style={styles.container}>
@@ -65,32 +64,47 @@ class SignIn extends Component {
         </View>
 
         <View style={styles.formContainer}>
-          <SigninForm
-            navigate={navigate}
-            signIn={this.signIn}
-            email={email}
-            password={password}
-            onChange={this.onChange}
-          />
+          <Mutation mutation={signInQuery}>
+            {(signin, { data, loading }) => {
+              console.disableYellowBox = true
+              if (data) {
+                this.setToken(data.signIn.token)
+              }
+              return (
+                <View>
+                  {loading && (
+                    <ActivityIndicator size="large" color={colors.primary} />
+                  )}
+                  <SigninForm
+                    navigate={navigate}
+                    signIn={() =>
+                      signin({
+                        variables: {
+                          email: this.state.email,
+                          password: this.state.password
+                        }
+                      })
+                    }
+                    email={email}
+                    password={password}
+                    onChange={this.onChange}
+                  />
+                </View>
+              )
+            }}
+          </Mutation>
         </View>
       </View>
     )
   }
 }
 
-const mapStateToProps = state => {
-  return {
-    user: state.user
-  }
-}
+export default SignIn
 
-const mapDispatchToProps = dispatch => {
-  return {
-    signIn: user => dispatch(ActionCreators.signInRequest(user))
+const signInQuery = gql`
+  mutation($email: String!, $password: String!) {
+    signIn(email: $email, password: $password) {
+      token
+    }
   }
-}
-
-export default connect(
-  mapStateToProps,
-  mapDispatchToProps
-)(SignIn)
+`

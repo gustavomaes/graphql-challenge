@@ -1,13 +1,13 @@
 import React, { Component } from "react"
-import { Text, View } from "react-native"
+import { Text, View, ActivityIndicator } from "react-native"
 
 import styles from "./style"
 import header from "../../styles/header"
-import FloatButton from "../../components/FloatButton"
 
-//Redux
-import { connect } from "react-redux"
-import ActionCreators from "../../redux/actionCreators"
+//GraphQl
+import { Query } from "react-apollo"
+import gql from "graphql-tag"
+import { colors } from "../../styles/base"
 
 class BookDetail extends Component {
   static navigationOptions = {
@@ -17,53 +17,55 @@ class BookDetail extends Component {
     headerTitleStyle: header.headerTitleStyle
   }
 
+  state = {
+    id: ""
+  }
+
   componentDidMount() {
     id = this.props.navigation.getParam("id", {})
-
-    this.props.oneBook(id)
+    this.setState({ id })
   }
 
   render() {
-    const { books } = this.props
-
     return (
       <View style={styles.container}>
-        {!books.isLoading &&
-          books.singleData.authorId && (
-            <View>
-              <Text style={styles.title}>Name</Text>
-              <Text style={styles.description}>{books.singleData.name}</Text>
-              <Text style={styles.title}>Genre</Text>
-              <Text style={styles.description}>{books.singleData.genre}</Text>
-              <Text style={styles.title}>Author Name</Text>
-              {/* <Text style={styles.description}>{authorId.name}</Text> */}
-              <Text style={styles.description}>
-                {books.singleData.authorId.name}
-              </Text>
-              <Text style={styles.title}>Author Age</Text>
-              <Text style={styles.description}>
-                {books.singleData.authorId.age}
-              </Text>
-            </View>
-          )}
+        <Query query={oneBook} variables={{ id: this.state.id }}>
+          {({ data, loading }) => {
+            const { book } = data
+            if (loading) {
+              return <ActivityIndicator size="large" color={colors.primary} />
+            }
+            console.log(book)
+            return (
+              <View>
+                <Text style={styles.title}>Name</Text>
+                <Text style={styles.description}>{book.name}</Text>
+                <Text style={styles.title}>Genre</Text>
+                <Text style={styles.description}>{book.genre}</Text>
+                <Text style={styles.title}>Author Name</Text>
+                <Text style={styles.description}>{book.authorId.name}</Text>
+                <Text style={styles.title}>Author Age</Text>
+                <Text style={styles.description}>{book.authorId.age}</Text>
+              </View>
+            )
+          }}
+        </Query>
       </View>
     )
   }
 }
 
-const mapStateToProps = state => {
-  return {
-    books: state.books
-  }
-}
+export default BookDetail
 
-const mapDispatchToProps = dispatch => {
-  return {
-    oneBook: id => dispatch(ActionCreators.oneBookRequest(id))
+const oneBook = gql`
+  query oneBook($id: ID!) {
+    book(id: $id) {
+      name
+      genre
+      authorId {
+        name
+        age
+      }
+    }
   }
-}
-
-export default connect(
-  mapStateToProps,
-  mapDispatchToProps
-)(BookDetail)
+`

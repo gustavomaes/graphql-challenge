@@ -1,14 +1,23 @@
 import React, { Component } from "react"
 
-import { Image, View, AsyncStorage } from "react-native"
+import {
+  Image,
+  View,
+  Text,
+  ActivityIndicator,
+  AsyncStorage
+} from "react-native"
+
+import { StackActions, NavigationActions } from "react-navigation"
 
 import styles from "./style"
 import header from "../../styles/header"
+import { colors } from "../../styles/base"
 import SignupForm from "../../components/SignupForm"
 
-//Redux
-import { connect } from "react-redux"
-import ActionCreators from "../../redux/actionCreators"
+//GraphQl
+import { Mutation } from "react-apollo"
+import gql from "graphql-tag"
 
 class SignUp extends Component {
   static navigationOptions = {
@@ -38,23 +47,14 @@ class SignUp extends Component {
     this.props.navigation.dispatch(resetAction)
   }
 
-  signUp = () => {
-    this.props.signUp({
-      name: this.state.name,
-      email: this.state.email,
-      password: this.state.password
+  setToken = token => {
+    AsyncStorage.setItem("@root:token", token).then(() => {
+      this.goHome()
     })
   }
 
   render() {
     const { name, email, password } = this.state
-    const { user } = this.props
-
-    if (user.token != "") {
-      AsyncStorage.setItem("@root:token", user.token).then(() => {
-        this.goHome()
-      })
-    }
 
     return (
       <View style={styles.container}>
@@ -67,32 +67,47 @@ class SignUp extends Component {
         </View>
 
         <View style={styles.formContainer}>
-          <SignupForm
-            signUp={this.signUp}
-            name={name}
-            email={email}
-            password={password}
-            onChange={this.onChange}
-          />
+          <Mutation mutation={signUpQuery}>
+            {(signup, { data, loading }) => {
+              if (data) {
+                this.setToken(data.signUp.token)
+              }
+              return (
+                <View>
+                  {loading && (
+                    <ActivityIndicator size="large" color={colors.primary} />
+                  )}
+                  <SignupForm
+                    signUp={() =>
+                      signup({
+                        variables: {
+                          name: this.state.name,
+                          email: this.state.email,
+                          password: this.state.password
+                        }
+                      })
+                    }
+                    name={name}
+                    email={email}
+                    password={password}
+                    onChange={this.onChange}
+                  />
+                </View>
+              )
+            }}
+          </Mutation>
         </View>
       </View>
     )
   }
 }
 
-const mapStateToProps = state => {
-  return {
-    user: state.user
-  }
-}
+export default SignUp
 
-const mapDispatchToProps = dispatch => {
-  return {
-    signUp: user => dispatch(ActionCreators.signUpRequest(user))
+const signUpQuery = gql`
+  mutation($name: String!, $email: String!, $password: String!) {
+    signUp(name: $name, email: $email, password: $password) {
+      token
+    }
   }
-}
-
-export default connect(
-  mapStateToProps,
-  mapDispatchToProps
-)(SignUp)
+`

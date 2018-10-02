@@ -5,7 +5,7 @@ import gql from "graphql-tag"
 import { AsyncStorage } from "react-native"
 
 const httpLink = new HttpLink({
-  uri: "https://95b7794a.ngrok.io/graphql"
+  uri: "https://76081350.ngrok.io/graphql"
 })
 
 export const getToken = async () => {
@@ -15,119 +15,12 @@ export const getToken = async () => {
 
 export const apolloClient = new ApolloClient({
   link: httpLink,
-  cache: new InMemoryCache()
+  cache: new InMemoryCache(),
+  headers: {
+    token:
+      "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjViYjE2MTE5MTRiOGJhMmQ3NDljMGNkNyIsImVtYWlsIjoiZ3VzdGF2b0BnbWFpbC5jb20iLCJuYW1lIjoiR3VzdGF2byIsImlhdCI6MTUzODUwMDA5NX0.It4_yObOlajxkiNu4P7tlTAVLN3SAFhjZWRbMpbYMSA"
+  }
 })
-
-//USER
-export const signIn = (email, password) => {
-  return apolloClient.mutate({
-    mutation: gql`
-      mutation {
-        signIn(email: "${email}", password: "${password}") {
-          token
-        }
-      }
-    `
-  })
-}
-
-export const signUp = (name, email, password) => {
-  return apolloClient.mutate({
-    mutation: gql`
-      mutation {
-        signUp(
-          name: "${name}"
-          email: "${email}"
-          password: "${password}"
-        ) {
-          token
-        }
-      }
-    `
-  })
-}
-
-//BOOKS
-export const allBooks = async (size, page, token) => {
-  return apolloClient.query({
-    query: gql`
-      {
-        books(size:${size}, page:${page}) {
-          name
-          id
-        }
-      }
-    `,
-    context: {
-      headers: {
-        token: token
-      }
-    }
-  })
-}
-
-export const oneBook = async (id, token) => {
-  return apolloClient.query({
-    query: gql`
-      {
-        book(id: "${id}") {
-          name
-          genre
-          authorId {
-            name
-            age
-          }
-        }
-      }
-    `,
-    context: {
-      headers: {
-        token: token
-      }
-    }
-  })
-}
-
-export const addBook = (name, genre, authorId, token) => {
-  return apolloClient.mutate({
-    mutation: gql`
-      mutation {
-        addBook(
-          name: "${name}"
-          genre: "${genre}"
-          authorId: "${authorId}"
-        ) {
-          name
-          id
-        }
-      }
-    `,
-    context: {
-      headers: {
-        token: token
-      }
-    }
-  })
-}
-
-//Authors
-export const allAuthors = async token => {
-  return apolloClient.query({
-    query: gql`
-      {
-        authors {
-          name
-          id
-        }
-      }
-    `,
-    context: {
-      headers: {
-        token: token
-      }
-    }
-  })
-}
 
 export const addAuthor = (name, age, token) => {
   return apolloClient.mutate({

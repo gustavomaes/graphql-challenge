@@ -1,13 +1,14 @@
 import React, { Component } from "react"
-import { View } from "react-native"
+import { View, ActivityIndicator } from "react-native"
 
 import styles from "./style"
 import header from "../../styles/header"
 import AuthorForm from "../../components/AuthorForm"
 
-//Redux
-import { connect } from "react-redux"
-import ActionCreators from "../../redux/actionCreators"
+//GraphQl
+import { Query, Mutation } from "react-apollo"
+import gql from "graphql-tag"
+import { colors } from "../../styles/base"
 
 class AddAuthor extends Component {
   static navigationOptions = {
@@ -19,7 +20,7 @@ class AddAuthor extends Component {
 
   state = {
     name: "",
-    age: ""
+    age: 0
   }
 
   onChange = (input, value) => {
@@ -28,37 +29,49 @@ class AddAuthor extends Component {
     this.setState(change)
   }
 
-  addAuthor = () => {
-    this.props.addAuthor({
-      name: this.state.name,
-      age: this.state.age
-    })
-    this.props.navigation.goBack()
-  }
-
   render() {
     const { name, age } = this.state
 
     return (
       <View style={styles.container}>
-        <AuthorForm
-          addAuthor={this.addAuthor}
-          name={name}
-          age={age}
-          onChange={this.onChange}
-        />
+        <Mutation mutation={addAuthorQuery}>
+          {(addauthor, { data, loading }) => {
+            if (data) {
+              this.props.navigation.goBack()
+            }
+            return (
+              <View>
+                <AuthorForm
+                  addAuthor={() =>
+                    addauthor({
+                      variables: {
+                        name: name,
+                        age: parseInt(age)
+                      }
+                    })
+                  }
+                  name={name}
+                  age={age}
+                  onChange={this.onChange}
+                />
+                {loading && (
+                  <ActivityIndicator size="large" color={colors.primary} />
+                )}
+              </View>
+            )
+          }}
+        </Mutation>
       </View>
     )
   }
 }
 
-const mapDispatchToProps = dispatch => {
-  return {
-    addAuthor: body => dispatch(ActionCreators.addAuthorRequest(body))
-  }
-}
+export default AddAuthor
 
-export default connect(
-  null,
-  mapDispatchToProps
-)(AddAuthor)
+const addAuthorQuery = gql`
+  mutation($name: String!, $age: Int!) {
+    addAuthor(name: $name, age: $age) {
+      name
+    }
+  }
+`

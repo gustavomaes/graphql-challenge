@@ -4,7 +4,7 @@ import styles from "./style"
 import Icon from "react-native-vector-icons/Ionicons"
 import { colors } from "../../styles/base"
 
-const FloatButton = ({ navigate }) => {
+const FloatButton = ({ navigate, newBook }) => {
   return (
     <ActionButton buttonColor={colors.primary}>
       <ActionButton.Item
@@ -17,7 +17,7 @@ const FloatButton = ({ navigate }) => {
       <ActionButton.Item
         buttonColor={colors.accentColor}
         title="Add Book"
-        onPress={() => navigate("AddBook")}
+        onPress={() => navigate("AddBook", { newBook: newBook() })}
       >
         <Icon name="md-book" style={styles.actionButtonIcon} />
       </ActionButton.Item>

@@ -1,13 +1,14 @@
 import React, { Component } from "react"
-import { View, Text } from "react-native"
+import { View, ActivityIndicator } from "react-native"
 
 import styles from "./style"
 import header from "../../styles/header"
 import BookForm from "../../components/BookForm"
 
-//Redux
-import { connect } from "react-redux"
-import ActionCreators from "../../redux/actionCreators"
+//GraphQl
+import { Query, Mutation } from "react-apollo"
+import gql from "graphql-tag"
+import { colors } from "../../styles/base"
 
 class AddBook extends Component {
   static navigationOptions = {
@@ -23,23 +24,10 @@ class AddBook extends Component {
     author: ""
   }
 
-  componentDidMount() {
-    this.props.allAuthors()
-  }
-
   onChange = (input, value) => {
     let change = {}
     change[input] = value
     this.setState(change)
-  }
-
-  addBook = () => {
-    this.props.addBook({
-      name: this.state.name,
-      genre: this.state.genre,
-      authorId: this.state.author
-    })
-    this.props.navigation.goBack()
   }
 
   render() {
@@ -47,35 +35,74 @@ class AddBook extends Component {
 
     return (
       <View style={styles.container}>
-        {this.props.authors.data && (
-          <BookForm
-            name={name}
-            genre={genre}
-            author={author}
-            authorList={this.props.authors.data}
-            onChange={this.onChange}
-            addBook={this.addBook}
-          />
-        )}
+        <Query query={allAuthors}>
+          {({ data, loading }) => {
+            const { authors } = data
+            if (loading) {
+              return <ActivityIndicator size="large" color={colors.primary} />
+            }
+
+            return (
+              <Mutation mutation={addBookQuery}>
+                {(addbook, { data, loading }) => {
+                  if (data) {
+                    console.log(("data.book> ", data.addBook))
+                    this.props.navigation.state.params.newBook(data.addBook)
+                    this.props.navigation.goBack()
+                  }
+
+                  return (
+                    <View>
+                      <BookForm
+                        name={name}
+                        genre={genre}
+                        author={author}
+                        authorList={authors}
+                        onChange={this.onChange}
+                        addBook={() =>
+                          addbook({
+                            variables: {
+                              name: this.state.name,
+                              genre: this.state.genre,
+                              authorId: this.state.author
+                            }
+                          })
+                        }
+                      />
+                      {loading && (
+                        <ActivityIndicator
+                          size="large"
+                          color={colors.primary}
+                        />
+                      )}
+                    </View>
+                  )
+                }}
+              </Mutation>
+            )
+          }}
+        </Query>
       </View>
     )
   }
 }
 
-const mapStateToProps = state => {
-  return {
-    authors: state.authors
-  }
-}
+export default AddBook
 
-const mapDispatchToProps = dispatch => {
-  return {
-    allAuthors: () => dispatch(ActionCreators.allAuthorsRequest()),
-    addBook: body => dispatch(ActionCreators.addBookRequest(body))
+const addBookQuery = gql`
+  mutation($name: String!, $genre: String!, $authorId: ID!) {
+    addBook(name: $name, genre: $genre, authorId: $authorId) {
+      name
+      id
+    }
   }
-}
+`
 
-export default connect(
-  mapStateToProps,
-  mapDispatchToProps
-)(AddBook)
+const allAuthors = gql`
+  {
+    authors {
+      name
+      id
+    }
+  }
+`

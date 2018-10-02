@@ -1,6 +1,4 @@
 import React from "react"
-import store from "./redux"
-import { Provider } from "react-redux"
 import { createStackNavigator } from "react-navigation"
 
 //GraphQL
@@ -30,11 +28,9 @@ const RootStack = createStackNavigator(
 )
 
 const App = () => (
-  <Provider store={store}>
-    <ApolloProvider client={apolloClient}>
-      <RootStack />
-    </ApolloProvider>
-  </Provider>
+  <ApolloProvider client={apolloClient}>
+    <RootStack />
+  </ApolloProvider>
 )
 
 export default App

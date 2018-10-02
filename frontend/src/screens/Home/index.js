@@ -1,14 +1,22 @@
 import React, { Component } from "react"
-import { Text, View, FlatList, TextInput, TouchableOpacity } from "react-native"
+import {
+  Text,
+  View,
+  FlatList,
+  TextInput,
+  ActivityIndicator,
+  TouchableOpacity
+} from "react-native"
 
 import styles from "./style"
 import header from "../../styles/header"
 import FloatButton from "../../components/FloatButton"
 import CustomBar from "../../components/CustomBar"
 
-//Redux
-import { connect } from "react-redux"
-import ActionCreators from "../../redux/actionCreators"
+//GraphQl
+import { Query } from "react-apollo"
+import gql from "graphql-tag"
+import { colors } from "../../styles/base"
 
 class Home extends Component {
   static navigationOptions = {
@@ -23,11 +31,8 @@ class Home extends Component {
     searchData: [],
     size: 15,
     page: 0,
-    term: ""
-  }
-
-  componentDidMount() {
-    this.props.allBooks(this.state.size, this.state.page)
+    term: "",
+    newBook: null
   }
 
   componentWillReceiveProps(nextProps) {
@@ -39,77 +44,121 @@ class Home extends Component {
     }
   }
 
-  loadMore = () => {
-    this.setState({ page: this.state.page + 1 })
-    this.props.allBooks(this.state.size, this.state.page)
-  }
-
-  searchFilter = text => {
-    const newData = this.state.data.filter(function(item) {
+  searchFilter = (data, text) => {
+    const newData = data.filter(function(item) {
       const itemData = item.name.toUpperCase()
       const textData = text.toUpperCase()
       return itemData.indexOf(textData) > -1
     })
 
-    this.setState({ searchData: newData, term: text })
+    return newData
+  }
+
+  newBook = book => {
+    console.log("book> ", book)
+    this.setState({ newBook: book })
   }
 
   render() {
     const { navigate } = this.props.navigation
-    const { books } = this.props
+    const { size, page } = this.state
     return (
-      <View style={styles.container}>
-        <CustomBar />
-        <TextInput
-          style={styles.search}
-          onChangeText={text => this.searchFilter(text)}
-          value={this.state.term}
-          placeholder="Search Here"
-        />
+      <Query query={allBooks(size, page)}>
+        {({ data, loading, fetchMore, updateQuery }) => {
+          const { books } = data
+          if (loading) {
+            return <ActivityIndicator size="large" color={colors.primary} />
+          }
 
-        {!books.isLoading && (
-          <FlatList
-            data={this.state.searchData}
-            refreshing={false}
-            onRefresh={false}
-            renderItem={({ item, index }) => (
-              <TouchableOpacity
-                kye={index}
-                onPress={() => navigate("BookDetail", { id: item.id })}
-              >
-                <Text style={styles.item}>{item.name}</Text>
-              </TouchableOpacity>
-            )}
-            ListFooterComponent={() => {
-              return (
-                <TouchableOpacity onPress={() => this.loadMore()}>
-                  <Text style={styles.load}>Load more</Text>
-                </TouchableOpacity>
-              )
-            }}
-          />
-        )}
+          if (this.state.newBook) {
+            this.setState({ newBook: null })
+            updateQuery(prev => {
+              const previousData = prev.books
+              previousData.push(this.state.newBook)
+              return Object.assign({}, prev, {
+                books: previousData
+              })
+            })
+          }
 
-        <FloatButton navigate={navigate} />
-      </View>
+          books.reverse()
+          return (
+            <View style={styles.container}>
+              <CustomBar />
+              <TextInput
+                style={styles.search}
+                onChangeText={text => {
+                  updateQuery(prev => {
+                    const newData = this.searchFilter(prev.books, text)
+                    this.setState({ term: text })
+
+                    return Object.assign({}, prev, {
+                      books: newData
+                    })
+                  })
+                }}
+                value={this.state.term}
+                placeholder="Search Here"
+              />
+
+              <FlatList
+                data={books}
+                renderItem={({ item, index }) => (
+                  <TouchableOpacity
+                    kye={index}
+                    onPress={() =>
+                      navigate("BookDetail", {
+                        id: item.id
+                      })
+                    }
+                  >
+                    <Text style={styles.item}>{item.name}</Text>
+                  </TouchableOpacity>
+                )}
+                ListFooterComponent={() => {
+                  return (
+                    <TouchableOpacity
+                      onPress={() => {
+                        fetchMore({
+                          // note this is a different query than the one used in the
+                          // Query component
+                          query: allBooks(size + 1, page + 1),
+                          updateQuery: (prev, { fetchMoreResult }) => {
+                            const previousData = prev.books
+                            const newData = fetchMoreResult.books
+                            console.log("previousData> ", previousData)
+                            console.log("newData> ", newData)
+                            console.log("data> ", [...previousData, ...newData])
+
+                            return Object.assign({}, prev, {
+                              books: [...newData, ...previousData]
+                            })
+                          }
+                        })
+                      }}
+                    >
+                      <Text style={styles.load}>Load more</Text>
+                    </TouchableOpacity>
+                  )
+                }}
+              />
+
+              <FloatButton navigate={navigate} newBook={() => this.newBook} />
+            </View>
+          )
+        }}
+      </Query>
     )
   }
 }
 
-const mapStateToProps = state => {
-  return {
-    books: state.books
-  }
-}
+export default Home
 
-const mapDispatchToProps = dispatch => {
-  return {
-    allBooks: (size, page) =>
-      dispatch(ActionCreators.allBooksRequest(size, page))
+const allBooks = (size, page) => gql`
+  {
+    books(size:${size}, page:${page}) {
+      name
+      id
+    }
   }
-}
-
-export default connect(
-  mapStateToProps,
-  mapDispatchToProps
-)(Home)
+`
