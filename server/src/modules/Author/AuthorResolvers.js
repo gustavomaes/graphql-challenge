@@ -25,6 +25,7 @@ export const author = combineResolvers(
 export const addAuthor = combineResolvers(
   isAuthenticated,
   (parent, { name, age }) => {
+    console.log(name, age)
     const author = new AuthorModel({
       name,
       age
