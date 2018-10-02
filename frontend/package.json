@@ -1,0 +1,42 @@
+{
+  "name": "frontend",
+  "version": "0.0.1",
+  "private": true,
+  "license": "MIT",
+  "scripts": {
+    "start": "node node_modules/react-native/local-cli/cli.js start",
+    "test": "jest"
+  },
+  "dependencies": {
+    "@babel/runtime": "^7.0.0",
+    "apollo-cache-inmemory": "^1.2.10",
+    "apollo-client": "^2.4.2",
+    "apollo-link-context": "^1.0.9",
+    "apollo-link-error": "^1.1.1",
+    "apollo-link-http": "^1.5.5",
+    "axios": "^0.18.0",
+    "graphql": "^14.0.2",
+    "graphql-tag": "^2.9.2",
+    "react": "16.5.0",
+    "react-apollo": "^2.2.3",
+    "react-native": "0.57.1",
+    "react-native-action-button": "^2.8.5",
+    "react-native-vector-icons": "^5.0.0",
+    "react-navigation": "^2.17.0",
+    "react-redux": "^5.0.7",
+    "redux": "^4.0.0",
+    "redux-saga": "^0.16.0",
+    "redux-thunk": "^2.3.0",
+    "reduxsauce": "^1.0.0"
+  },
+  "devDependencies": {
+    "@babel/plugin-transform-runtime": "^7.1.0",
+    "babel-jest": "23.6.0",
+    "jest": "23.6.0",
+    "metro-react-native-babel-preset": "0.46.0",
+    "react-test-renderer": "16.5.0"
+  },
+  "jest": {
+    "preset": "react-native"
+  }
+}
