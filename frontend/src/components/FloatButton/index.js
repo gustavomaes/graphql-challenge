@@ -1,6 +1,6 @@
 import React from "react"
+import { StyleSheet } from "react-native"
 import ActionButton from "react-native-action-button"
-import styles from "./style"
 import Icon from "react-native-vector-icons/Ionicons"
 import { colors } from "../../styles/base"
 
@@ -26,3 +26,11 @@ const FloatButton = ({ navigate, newBook }) => {
 }
 
 export default FloatButton
+
+const styles = StyleSheet.create({
+  actionButtonIcon: {
+    fontSize: 20,
+    height: 22,
+    color: "white"
+  }
+})

@@ -1,8 +1,13 @@
-import React, { Component } from "react"
+import React from "react"
 
-import { View, Text, TextInput, TouchableOpacity } from "react-native"
-
-import styles from "./style"
+import {
+  StyleSheet,
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity
+} from "react-native"
+import { colors } from "../../styles/base"
 
 const SigninForm = ({ signUp, name, email, password, onChange }) => {
   return (
@@ -48,3 +53,23 @@ const SigninForm = ({ signUp, name, email, password, onChange }) => {
 }
 
 export default SigninForm
+
+const styles = StyleSheet.create({
+  container: {
+    padding: 20
+  },
+  input: {
+    height: 40,
+    marginBottom: 10,
+    padding: 10
+  },
+  buttonRegisterContainer: {
+    backgroundColor: colors.primary,
+    paddingVertical: 15
+  },
+  buttonText: {
+    color: colors.white,
+    textAlign: "center",
+    fontWeight: "700"
+  }
+})

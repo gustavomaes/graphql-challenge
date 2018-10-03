@@ -1,8 +1,7 @@
 import React from "react"
 
-import { View, Text, TextInput, TouchableOpacity, Button } from "react-native"
+import { StyleSheet, View, TextInput, Button } from "react-native"
 
-import styles from "./style"
 import { colors } from "../../styles/base"
 
 const AuthorForm = ({ addAuthor, name, age, onChange }) => {
@@ -41,3 +40,19 @@ const AuthorForm = ({ addAuthor, name, age, onChange }) => {
 }
 
 export default AuthorForm
+
+const styles = StyleSheet.create({
+  container: {
+    padding: 20
+  },
+  input: {
+    height: 40,
+    marginBottom: 10,
+    padding: 10
+  },
+  constainerButton: {
+    alignSelf: "center",
+    width: "80%",
+    margin: 10
+  }
+})

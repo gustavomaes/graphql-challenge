@@ -5,7 +5,7 @@ import gql from "graphql-tag"
 import { AsyncStorage } from "react-native"
 
 const httpLink = new HttpLink({
-  uri: "https://76081350.ngrok.io/graphql"
+  uri: "http://localhost:4000/graphql"
 })
 
 export const getToken = async () => {
@@ -21,20 +21,3 @@ export const apolloClient = new ApolloClient({
       "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjViYjE2MTE5MTRiOGJhMmQ3NDljMGNkNyIsImVtYWlsIjoiZ3VzdGF2b0BnbWFpbC5jb20iLCJuYW1lIjoiR3VzdGF2byIsImlhdCI6MTUzODUwMDA5NX0.It4_yObOlajxkiNu4P7tlTAVLN3SAFhjZWRbMpbYMSA"
   }
 })
-
-export const addAuthor = (name, age, token) => {
-  return apolloClient.mutate({
-    mutation: gql`
-      mutation {
-        addAuthor(name: "${name}", age: ${age}) {
-          name
-        }
-      }
-    `,
-    context: {
-      headers: {
-        token: token
-      }
-    }
-  })
-}
