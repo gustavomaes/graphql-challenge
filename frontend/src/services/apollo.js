@@ -5,7 +5,7 @@ import gql from "graphql-tag"
 import { AsyncStorage } from "react-native"
 
 const httpLink = new HttpLink({
-  uri: "https://76081350.ngrok.io/graphql"
+  uri: "http://localhost:4000/graphql"
 })
 
 export const getToken = async () => {
